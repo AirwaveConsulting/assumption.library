@@ -1,0 +1,89 @@
+<html>
+<head>
+ <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.js"></script>    
+</head>
+    <body>
+        <script type="text/javascript">
+            var movieLoop = function (response) {
+    var returnData = response;
+    console.log('data status:', returnData.results)
+
+      for (var i = 0; i < returnData.results.length; i++) {
+        var movies =  returnData.results[i];
+        console.log('movies:', movies)
+        // console.log(movies[i].title)
+        var source = $('#result-template').html();
+
+        var template = Handlebars.compile(source);
+        // console.log(movies)
+        var newHTML = template({movies});
+
+        $('.all-movies').append(newHTML);
+      };
+  
+}
+
+var fetch = function() {
+  var query = $('.search-input').val();
+  $.ajax({
+    method:"GET",
+   
+    url: 'http://api.themoviedb.org/3/search/movie?query='+query+'&api_key=415477c4d341bb0bdd4a02e7dca8a2c4',
+    jsonp: "callback",
+
+    success: function(response) {
+      movieLoop(response)
+      // console.log(response);
+    },
+    error: function(jqXHR, textStatus, errorThrown) {
+      console.log(textStatus);
+    },
+  })
+}
+
+$('.search').on('click', function(e) {
+      e.preventDefault(e);
+       tag = $('.search-input').val();
+
+       console.log(tag);
+      $('.movies').append(tag +"<button class='delete fa fa-times'></button>" +"<br>");
+      fetch();
+});
+        </script>
+     <div class="search-container">
+          <form class="search-form">
+            <h3>Type in a movie and Click Search</h3>
+            <div class="movies"></div> <!-- empty for hashtags -->
+            <div class="form-group">
+              <input type="text"
+                class="search-input form-control"
+                placeholder="Movie">
+              </input>
+            </div>
+            <button class="btn btn-primary search">Search</button>
+          </form>
+        </div>
+       
+        <div class="all-movies">
+       
+        </div>
+
+        <script id="result-template" type="text/x-handlebars-template">
+          <div class="jumbotron">
+            <span>Movie Title: {{movies.title}}</span></br>
+            <span>Overview: {{movies.overview}}</span></br>
+            <!-- <span>Release date: {{movies.release_date}}</span></br> -->
+            <img src="https://image.tmdb.org/t/p/w185/{{movies.poster_path}}"></br>
+            <!-- <span>Rated: {{movies.Rated}}</span></br> -->
+            <span>Release date: {{movies.release_date}}</span></br>
+            <span>Popularity: {{movies.vote_average}}</span></br>
+          </div>
+        </script>
+
+
+    </body>
+</html>
