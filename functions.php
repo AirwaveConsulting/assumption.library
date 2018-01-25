@@ -14,7 +14,7 @@ register_nav_menus( array(
 		'primary' => esc_html__( 'Primary', 'main' ),
         'footer' => esc_html__( 'Footer' ),
 ) );
-    
+
 add_theme_support( 'html5', array(
 		'search-form',
 		'gallery',
@@ -59,9 +59,9 @@ function dvdlist_post_type() {
 		'not_found'           => __( 'Not Found'),
 		'not_found_in_trash'  => __( 'Not found in Trash'),
 	);
-	
+
 // Set other options for Custom Post Type
-	
+
 	$args = array(
 		'label'               => __( 'dvd-list'),
 		'description'         => __( 'DVDs that the library has'),
@@ -69,12 +69,12 @@ function dvdlist_post_type() {
 		'labels'              => $labels,
 		// Features this CPT supports in Post Editor
 		'supports'            => array( 'title', 'thumbnail', 'revisions'),
-		// You can associate this CPT with a taxonomy or custom taxonomy. 
+		// You can associate this CPT with a taxonomy or custom taxonomy.
 		'taxonomies'          => array( 'category' ),
 		/* A hierarchical CPT is like Pages and can have
 		* Parent and child items. A non-hierarchical CPT
 		* is like Posts.
-		*/	
+		*/
 		'hierarchical'        => false,
 		'public'              => true,
 		'show_ui'             => true,
@@ -88,13 +88,25 @@ function dvdlist_post_type() {
 		'publicly_queryable'  => true,
 		'capability_type'     => 'page',
 	);
-	
+
 	// Registering your Custom Post Type
 	register_post_type( 'dvd-list', $args );
 
 }
 add_action( 'init', 'dvdlist_post_type', 0 );
 // END ORGANIZATION POST TYPE
+
+// set the search function to search only dvd's
+function dvd_search( $query ) {
+
+    if ( is_search() && $query->is_main_query() && $query->get( 's' ) ){
+
+        $query->set('post_type', array('dvd-list'));
+    }
+
+    return $query;
+};
+add_filter('pre_get_posts', 'dvd_search');
 
 // curl JSON request from stackoverflow user Amal Murali (thanks man)
 function curl_get_contents($url)
@@ -111,16 +123,17 @@ function curl_get_contents($url)
 
 // TheMovieDB poster call (gets the actual poster path)
 function get_movie_poster($post_id){
-    
+
     // check to see if it's a DVD first, just in case
     if(get_post_type($post_id) == 'dvd-list'){
-        
+
         // see if the poster has been queried but was enetered as NULL, search again. Mostly just to fix errors on first caching
         if(metadata_exists('post', $post_id, 'poster_path')){
-            
+
             $meta_content = get_post_meta($post_id, 'poster_path', true);
-            
-            if($meta_content == NULL || $meta_content == 'no'){
+						$meta_content_id = get_post_meta($post_id, 'movie_id', true);
+
+            if($meta_content == NULL){
                 // my api key
                 $api_key = '415477c4d341bb0bdd4a02e7dca8a2c4';
 
@@ -132,24 +145,28 @@ function get_movie_poster($post_id){
                 $json = json_decode(curl_get_contents($api_query), true);
 
                 $poster_path = $json['results'][0]['poster_path'];
+								$movie_id = $json['results'][0]['id'];
 
                 if($poster_path == NULL){
                      $poster_path = 'no';
+										 $movie_id = 'no';
                 }
-                
+
                 update_post_meta($post_id, 'poster_path', $poster_path, false);
+								update_post_meta($post_id, 'movie_id', $movie_id, false);
             }
-            
+
 //            if($meta_content == 'no'){
 //                $poster_path = 'no';
 //            }
-            
+
             else{
                 $poster_path = $meta_content;
+								$movie_id = $meta_content_id;
             }
-            
+
         }
-    
+
         // get the movie poster path because it isn't cached in meta
         else{
             // my api key
@@ -163,15 +180,18 @@ function get_movie_poster($post_id){
             $json = json_decode(curl_get_contents($api_query), true);
 
             $poster_path = $json['results'][0]['poster_path'];
-            
+						$movie_id = $json['results'][0]['id'];
+
             if($poster_path == NULL){
                 $poster_path = 'no';
+								$url = 'no';
             }
-            
+
             add_post_meta($post_id, 'poster_path', $poster_path, false);
+						add_post_meta($post_id, 'movie_id', $movie_id, false);
         }
-            
-        return $poster_path;
+				$result = array('poster_path' => $poster_path, 'movie_id' => $movie_id);
+				return $result;
     }
 }
 
@@ -179,19 +199,13 @@ function get_movie_poster($post_id){
 add_action('save_post', 'get_movie_poster');
 
 // TheMovieDB poster call (prints the element for the page) (template tag for use in loop)
-function the_movie_poster() {
-    
+function the_movie() {
+
         $post_id = get_the_ID();
-    
-        // check if a custom poster has been requested
-        if(get_field('movie_poster')){
-            $poster = '<img title="' . get_the_title($post_id) . '" class="poster" src="' . get_field('movie_poster') . '">';
-        }
-    
-        // grab the poster path string from api call function
-        else{
-            
-            $poster_path = get_movie_poster($post_id);
+        		// grab the poster path string from api call function
+						$get = get_movie_poster($post_id);
+            $poster_path = $get['poster_path'];
+						$movie_id = $get['movie_id'];
 
             // print text-based poster if one wasn't found in api call
             if($poster_path == 'no'){
@@ -200,11 +214,9 @@ function the_movie_poster() {
 
             // display image poster since it was found
             else{
-                $poster = '<img title="' . get_the_title($post_id) . '" class="poster" src="http://image.tmdb.org/t/p/w185' . $poster_path . '">';
+                $poster = '<a target="_blank" href="https://www.themoviedb.org/movie/' . $movie_id . '"><img title="' . get_the_title($post_id) . '" class="poster" src="http://image.tmdb.org/t/p/w185' . $poster_path . '"></a>';
             }
-        }
-            
-    // print the element on the page
-    echo $poster;
-    
+
+		echo $poster;
+
 }

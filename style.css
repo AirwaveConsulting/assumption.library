@@ -142,6 +142,19 @@ nav.primary ul li:hover a:before{
     height:100%;
 }
 
+nav.primary ul li.current-menu-item a{
+  font-weight:700;
+}
+
+nav.primary ul li.current-menu-item a:before{
+  height:10%;
+}
+
+nav.primary ul li.current-menu-item a:hover{
+  color:#000;
+  font-weight:normal;
+}
+
 nav.primary ul li a:hover{
     color:#fff;
     transition:0.1s;
@@ -218,7 +231,7 @@ section#content section.pageheader:after{
 section#content section.pageheader.home{
     height:98px;
 }
-    
+
 section#content section.pageheader img.ihls{
     height:60px;
     width:auto;
@@ -247,7 +260,7 @@ section#content section.pageheader div.ihls span{
         display:none;
     }
 }
-    
+
 section#content section.pageheader a.ihls{
     display:inline-block;
     text-decoration:none;
@@ -322,6 +335,7 @@ section#content section.body img{
 div.dvd-search{
     margin:40px 0px 0px 0px;
     font-family:'Libre Baskerville', serif;
+    position:relative;
 }
 
 div.dvd-search input{
@@ -336,6 +350,16 @@ div.dvd-search input{
 
 div.dvd-search input:focus{
     outline:none;
+}
+
+div.dvd-search input.searchsubmit{
+  width:30px;
+  position:absolute;
+  right:0;
+  top:0;
+  border-bottom:none;
+  z-index:999;
+  cursor:pointer;
 }
 
 ul.dvd-alphabet{

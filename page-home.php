@@ -7,7 +7,7 @@ get_header();
 
 <section class="pageheader home">
     <div class="ihls"><img class="ihls" src="<?php echo get_template_directory_uri(); ?>/img/ihls2.gif"><span>The Assumption Public Library is a<br>member of the Illinois Heartland Library System</span></div>
-    
+
     <a class="overdrive" href="https://rpls.overdrive.com/"></a>
     <a class="ihls" href="http://asmp.illshareit.com/"></a>
 </section>
